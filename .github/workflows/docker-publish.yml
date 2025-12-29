@@ -18,7 +18,7 @@ jobs:
   build-and-push:
     name: Build and push multi-platform images
     runs-on: ubuntu-latest
-    needs: ci
+    needs: quality-checks
     if: ${{ success() }}  # Only run if quality checks passed
     permissions:
       contents: read

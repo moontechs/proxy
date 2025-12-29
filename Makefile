@@ -6,7 +6,6 @@
 # Variables
 BINARY_NAME=proxy
 DOCKER_IMAGE=proxy:latest
-GOLANGCI_LINT_VERSION=v1.55.2
 REGISTRY=ghcr.io
 REPO_OWNER=$(shell git config --get remote.origin.url | sed -n 's/.*github.com[:/]\([^/]*\).*/\1/p')
 REPO_NAME=$(shell basename `git rev-parse --show-toplevel`)

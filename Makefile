@@ -83,37 +83,6 @@ docker-run: docker-build ## Build and run Docker container
 		-e LOG_LEVEL=DEBUG \
 		$(DOCKER_IMAGE)
 
-docker-compose-up: ## Start services with docker-compose
-	@echo "Starting services..."
-	@docker-compose up -d
-	@echo "✓ Services started"
-	@echo ""
-	@echo "Test HTTP routing:"
-	@echo "  curl -H 'Host: app.local' http://localhost"
-	@echo "  curl -H 'Host: api.local' http://localhost"
-	@echo ""
-	@echo "Add to /etc/hosts for domain resolution:"
-	@echo "  echo '127.0.0.1 app.local api.local www.local' | sudo tee -a /etc/hosts"
-
-docker-compose-down: ## Stop services with docker-compose
-	@docker-compose down
-
-docker-compose-logs: ## View docker-compose logs
-	@docker-compose logs -f
-
-docker-compose-pull: ## Pull latest images from registry
-	@echo "Pulling latest images..."
-	@docker-compose pull
-	@echo "✓ Images updated"
-
-docker-compose-restart: ## Restart docker-compose services
-	@echo "Restarting services..."
-	@docker-compose restart
-	@echo "✓ Services restarted"
-
-docker-compose-ps: ## Show running containers
-	@docker-compose ps
-
 install-tools: ## Install development tools
 	@echo "Installing development tools..."
 	@go install golang.org/x/tools/cmd/goimports@latest

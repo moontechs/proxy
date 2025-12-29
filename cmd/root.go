@@ -15,7 +15,7 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "proxy-nginx",
+	Use:   "proxy",
 	Short: "Docker-aware Nginx stream and HTTP proxy configurator",
 	Long: `Auto-generates Nginx configurations from Docker container labels.
 

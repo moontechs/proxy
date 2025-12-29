@@ -494,8 +494,6 @@ Complete working examples with documentation:
 
 - [QUICKSTART.md](QUICKSTART.md) - Quick start guide
 - [DEBUG_OUTPUT.md](DEBUG_OUTPUT.md) - Debug logging guide
-- [PRD.md](PRD.md) - Product requirements
-- [IMPLEMENTATION.md](IMPLEMENTATION.md) - Implementation details
 
 ## Troubleshooting
 

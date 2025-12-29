@@ -9,7 +9,7 @@ nginx
 
 # Generate initial configuration
 echo "[Entrypoint] Generating initial Nginx configurations"
-/usr/local/bin/proxy-nginx generate || {
+/usr/local/bin/proxy generate || {
     echo "[Entrypoint] WARNING: Initial config generation failed, continuing anyway"
 }
 
@@ -19,6 +19,6 @@ if [ -f /etc/nginx/conf.d/proxy.conf ] || [ -f /etc/nginx/conf.d/http-proxy.conf
     nginx -s reload || echo "[Entrypoint] WARNING: Nginx reload failed"
 fi
 
-# Execute proxy-nginx command (default: watch)
-echo "[Entrypoint] Starting proxy-nginx $@"
-exec /usr/local/bin/proxy-nginx "$@"
+# Execute proxy command (default: watch)
+echo "[Entrypoint] Starting proxy $@"
+exec /usr/local/bin/proxy "$@"

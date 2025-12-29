@@ -11,7 +11,7 @@ RUN go mod download
 COPY . .
 
 # Build binary
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o proxy-nginx .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o proxy .
 
 # Runtime stage - nginx:alpine base
 FROM nginx:alpine
@@ -20,7 +20,7 @@ FROM nginx:alpine
 RUN apk --no-cache add ca-certificates
 
 # Copy binary from builder
-COPY --from=builder /build/proxy-nginx /usr/local/bin/proxy-nginx
+COPY --from=builder /build/proxy /usr/local/bin/proxy
 
 # Copy nginx main config with HTTP and stream modules
 COPY nginx/nginx.conf /etc/nginx/nginx.conf

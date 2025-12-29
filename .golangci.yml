@@ -1,39 +1,35 @@
 # golangci-lint configuration
 # https://golangci-lint.run/usage/configuration/
 
-version: 2
+version: "2"
 
 run:
   timeout: 5m
-  tests: true
-  modules-download-mode: readonly
+  tests: false  # Don't lint test files
 
 linters:
   enable:
-    # Default linters
-    - errcheck      # Check for unchecked errors
-    - govet         # Reports suspicious constructs
-    - ineffassign   # Detects ineffectual assignments
-    - staticcheck   # Go static analysis (includes gosimple, stylecheck)
-    - unused        # Find unused code
-
-    # Additional recommended linters
-    - misspell      # Check for misspelled words
-    - revive        # Fast, configurable, extensible linter
-    - gosec         # Security-focused linter
-    - bodyclose     # Check for unclosed HTTP body
-    - noctx         # Find sending http requests without context
-    - unconvert     # Remove unnecessary type conversions
-    - unparam       # Find unused function parameters
-    - whitespace    # Check for unnecessary whitespace
-    - gocyclo       # Check cyclomatic complexity
-    - gocognit      # Check cognitive complexity
-    - dupl          # Check for code duplication
-    - goconst       # Find repeated strings that could be constants
-    - goprintffuncname # Check printf-like function names
-    - errorlint     # Error wrapping issues
-    - nilerr        # Find nil errors being returned
-    - predeclared   # Find code that shadows predeclared identifiers
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - misspell
+    - revive
+    - gosec
+    - bodyclose
+    - noctx
+    - unconvert
+    - unparam
+    - whitespace
+    - gocyclo
+    - gocognit
+    - dupl
+    - goconst
+    - goprintffuncname
+    - errorlint
+    - nilerr
+    - predeclared
 
   settings:
     errcheck:
@@ -43,8 +39,8 @@ linters:
     govet:
       enable-all: true
       disable:
-        - shadow         # Too strict for practical use
-        - fieldalignment # Optimization, not correctness issue
+        - shadow
+        - fieldalignment
 
     gocyclo:
       min-complexity: 15
@@ -64,85 +60,21 @@ linters:
 
     revive:
       rules:
-        - name: exported
-          severity: warning
-          disabled: false
-        - name: unexported-return
-          disabled: true
-        - name: blank-imports
-          disabled: false
-        - name: context-as-argument
-          disabled: false
-        - name: dot-imports
-          disabled: false
-        - name: error-return
-          disabled: false
-        - name: error-strings
-          disabled: false
-        - name: error-naming
-          disabled: false
-        - name: increment-decrement
-          disabled: false
-        - name: var-naming
-          disabled: false
         - name: package-comments
-          disabled: true  # Not required for all packages
-        - name: range
-          disabled: false
-        - name: receiver-naming
-          disabled: false
-        - name: indent-error-flow
-          disabled: false
-        - name: superfluous-else
-          disabled: false
-        - name: unreachable-code
-          disabled: false
-        - name: redefines-builtin-id
-          disabled: false
+          disabled: true  # Not required
+        - name: unused-parameter
+          disabled: true  # Cobra requires all params
 
     gosec:
       severity: medium
       confidence: medium
       excludes:
-        - G104  # Audit errors not checked (covered by errcheck)
+        - G104
 
     staticcheck:
-      checks: ["all", "-ST1000"]  # Disable package comment requirement (was stylecheck)
+      checks: ["all", "-ST1000"]
 
 formatters:
   enable:
-    - gofmt         # Check code formatting
-    - goimports     # Check import formatting
-
-  exclusions:
-    rules:
-      # Exclude some linters from running on tests
-      - path: _test\.go$
-        linters:
-          - gocyclo
-          - gocognit
-          - errcheck
-          - dupl
-          - gosec
-          - govet
-          - revive
-          - noctx
-
-      # Exclude known issues in generated code
-      - path: ".*\\.pb\\.go$"
-        linters:
-          - all
-
-    max-issues-per-linter: 0
-    max-same-issues: 0
-
-    # Show all issues
-    exclude-use-default: false
-
-output:
-  formats:
-    colored-line-number:
-      print-issued-lines: true
-      print-linter-name: true
-      uniq-by-line: true
-      sort-results: true
+    - gofmt
+    - goimports

@@ -1,0 +1,105 @@
+name: Quality Checks
+
+on:
+  workflow_call:
+    inputs:
+      go-version:
+        description: 'Go version to use'
+        required: false
+        type: string
+        default: '1.24'
+    outputs:
+      coverage-file:
+        description: 'Path to coverage file'
+        value: ${{ jobs.quality.outputs.coverage-file }}
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    outputs:
+      coverage-file: coverage.out
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ inputs.go-version }}
+          cache: true
+
+      - name: Download dependencies
+        run: |
+          go mod download
+          go mod verify
+
+      - name: Run go fmt check
+        run: |
+          if [ -n "$(gofmt -l .)" ]; then
+            echo "❌ Go code is not formatted:"
+            gofmt -d .
+            exit 1
+          fi
+          echo "✅ Code formatting check passed"
+
+      - name: Run go vet
+        run: |
+          echo "Running go vet..."
+          go vet ./...
+          echo "✅ go vet passed"
+
+      - name: Install staticcheck
+        run: go install honnef.co/go/tools/cmd/staticcheck@latest
+
+      - name: Run staticcheck
+        run: |
+          echo "Running staticcheck..."
+          staticcheck ./...
+          echo "✅ staticcheck passed"
+
+      - name: Install golangci-lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: v1.55.2
+          args: --timeout 5m
+
+      - name: Run tests with coverage
+        run: |
+          echo "Running tests with race detection..."
+          go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+          echo "✅ Tests passed"
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage.out
+          retention-days: 5
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.out
+          flags: unittests
+          fail_ci_if_error: false
+
+      - name: Build binary
+        run: |
+          echo "Building binary..."
+          CGO_ENABLED=0 go build -ldflags="-s -w" -o proxy .
+          echo "✅ Binary built successfully"
+
+      - name: Quality checks summary
+        run: |
+          echo "## ✅ Quality Checks Passed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All quality gates passed successfully:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Code formatting (gofmt)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Go vet" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Staticcheck" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Golangci-lint" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Tests with race detection" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Binary build" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** Ready for Docker build 🚀" >> $GITHUB_STEP_SUMMARY

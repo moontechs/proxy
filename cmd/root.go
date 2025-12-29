@@ -32,11 +32,7 @@ Container labels:
 	Version: "2.0.0",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		// Initialize configuration from flags and environment
-		var err error
-		cfg, err = getConfig(cmd)
-		if err != nil {
-			return err
-		}
+		cfg = getConfig(cmd)
 
 		// Initialize logger
 		log = setupLogger(cmd)
@@ -50,7 +46,7 @@ func Execute() error {
 }
 
 func init() {
-	// Persistent flags available to all subcommands
+	// persistent flags available to all subcommands
 	rootCmd.PersistentFlags().String("log-level", "INFO", "Log level (DEBUG, INFO, TRACE)")
 	rootCmd.PersistentFlags().String("docker-host", "unix:///var/run/docker.sock", "Docker socket path")
 	rootCmd.PersistentFlags().String("stream-config-path", "/etc/nginx/conf.d/proxy.conf", "Nginx stream config output path")
@@ -59,14 +55,15 @@ func init() {
 }
 
 // getConfig builds config from flags and environment variables
-func getConfig(cmd *cobra.Command) (*config.Config, error) {
-	logLevel, _ := cmd.Flags().GetString("log-level")
-	dockerHost, _ := cmd.Flags().GetString("docker-host")
-	streamConfigPath, _ := cmd.Flags().GetString("stream-config-path")
-	httpConfigPath, _ := cmd.Flags().GetString("http-config-path")
-	reloadCmd, _ := cmd.Flags().GetString("reload-cmd")
+func getConfig(cmd *cobra.Command) *config.Config {
+	// these flags are defined in init(), so GetString should never error
+	logLevel, _ := cmd.Flags().GetString("log-level")                  //nolint:errcheck // flags are predefined
+	dockerHost, _ := cmd.Flags().GetString("docker-host")              //nolint:errcheck // flags are predefined
+	streamConfigPath, _ := cmd.Flags().GetString("stream-config-path") //nolint:errcheck // flags are predefined
+	httpConfigPath, _ := cmd.Flags().GetString("http-config-path")     //nolint:errcheck // flags are predefined
+	reloadCmd, _ := cmd.Flags().GetString("reload-cmd")                //nolint:errcheck // flags are predefined
 
-	// Override with environment variables if set
+	// override with environment variables if set
 	if val := os.Getenv("LOG_LEVEL"); val != "" {
 		logLevel = val
 	}
@@ -90,29 +87,29 @@ func getConfig(cmd *cobra.Command) (*config.Config, error) {
 		StreamConfigPath: streamConfigPath,
 		HTTPConfigPath:   httpConfigPath,
 		NginxReloadCmd:   reloadCmd,
-	}, nil
+	}
 }
 
 // setupLogger initializes the logger based on configuration
 func setupLogger(cmd *cobra.Command) *lgr.Logger {
-	logLevel, _ := cmd.Flags().GetString("log-level")
+	logLevel, _ := cmd.Flags().GetString("log-level") //nolint:errcheck // flag is predefined
 
-	// Override with environment if set
+	// override with environment if set
 	if val := os.Getenv("LOG_LEVEL"); val != "" {
 		logLevel = val
 	}
 
 	opts := []lgr.Option{
-		lgr.Msec,        // Add millisecond precision
-		lgr.LevelBraces, // Use [INFO] format
+		lgr.Msec,        // add millisecond precision
+		lgr.LevelBraces, // use [INFO] format
 	}
 
-	// Set caller info if requested
+	// set caller info if requested
 	if os.Getenv("LOG_CALLER") == "true" {
 		opts = append(opts, lgr.CallerFile, lgr.CallerFunc)
 	}
 
-	// Set log level - lgr only supports Debug and Trace filtering
+	// set log level - lgr only supports Debug and Trace filtering
 	switch logLevel {
 	case "DEBUG":
 		opts = append(opts, lgr.Debug)
@@ -124,12 +121,12 @@ func setupLogger(cmd *cobra.Command) *lgr.Logger {
 	return lgr.New(opts...)
 }
 
-// Helper to get current config (used by subcommands)
+// GetConfig returns the current configuration (used by subcommands)
 func GetConfig() *config.Config {
 	return cfg
 }
 
-// Helper to get current logger (used by subcommands)
+// GetLogger returns the current logger (used by subcommands)
 func GetLogger() *lgr.Logger {
 	return log
 }

@@ -7,15 +7,15 @@ import (
 
 // Config holds all proxy configuration
 type Config struct {
-	// Docker
+	// docker
 	DockerHost string
 
-	// Nginx configuration paths
-	StreamConfigPath string // Path to stream module config (default: /etc/nginx/conf.d/proxy.conf)
-	HTTPConfigPath   string // Path to HTTP module config (default: /etc/nginx/conf.d/http-proxy.conf)
-	NginxReloadCmd   string // Nginx reload command (default: nginx -s reload)
+	// nginx configuration paths
+	StreamConfigPath string // path to stream module config (default: /etc/nginx/conf.d/proxy.conf)
+	HTTPConfigPath   string // path to HTTP module config (default: /etc/nginx/conf.d/http-proxy.conf)
+	NginxReloadCmd   string // nginx reload command (default: nginx -s reload)
 
-	// Logging
+	// logging
 	LogLevel  string
 	LogCaller bool
 }
@@ -25,15 +25,15 @@ type Config struct {
 func Load() (*Config, error) {
 	cfg := &Config{}
 
-	// Docker configuration
+	// docker configuration
 	cfg.DockerHost = getEnvOrDefault("DOCKER_HOST", "unix:///var/run/docker.sock")
 
-	// Nginx configuration paths
+	// nginx configuration paths
 	cfg.StreamConfigPath = getEnvOrDefault("NGINX_STREAM_CONFIG_PATH", "/etc/nginx/conf.d/proxy.conf")
 	cfg.HTTPConfigPath = getEnvOrDefault("NGINX_HTTP_CONFIG_PATH", "/etc/nginx/conf.d/http-proxy.conf")
 	cfg.NginxReloadCmd = getEnvOrDefault("NGINX_RELOAD_CMD", "nginx -s reload")
 
-	// Logging configuration
+	// logging configuration
 	cfg.LogLevel = strings.ToUpper(getEnvOrDefault("LOG_LEVEL", "INFO"))
 	cfg.LogCaller = getEnvOrDefault("LOG_CALLER", "false") == "true"
 

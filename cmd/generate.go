@@ -35,7 +35,11 @@ Generates two config files:
 		if err != nil {
 			return logError("docker connection failed: %w", err)
 		}
-		defer dockerClient.Close()
+		defer func() {
+			if closeErr := dockerClient.Close(); closeErr != nil {
+				log.Logf("WARN [Generate] failed to close docker client: %v", closeErr)
+			}
+		}()
 
 		// Scan containers
 		ctx := context.Background()

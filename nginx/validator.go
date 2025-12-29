@@ -21,6 +21,7 @@ func NewValidator(log *lgr.Logger) *Validator {
 func (v *Validator) Validate() error {
 	v.log.Logf("DEBUG [Validator] running nginx -t")
 
+	//nolint:noctx // validation command, context not needed
 	cmd := exec.Command("nginx", "-t")
 	output, err := cmd.CombinedOutput()
 

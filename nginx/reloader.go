@@ -26,7 +26,7 @@ func NewReloader(reloadCmd string, log *lgr.Logger) (*Reloader, error) {
 // Reload reloads Nginx configuration
 // Implements reload throttling (minimum 1 second between reloads)
 func (r *Reloader) Reload() error {
-	// Prevent reload storms
+	// prevent reload storms
 	if time.Since(r.lastReload) < 1*time.Second {
 		r.log.Logf("WARN [Reloader] throttling reload, too_soon_after_last")
 		time.Sleep(1 * time.Second)
@@ -34,6 +34,8 @@ func (r *Reloader) Reload() error {
 
 	r.log.Logf("INFO [Reloader] executing reload_cmd=%s", r.reloadCmd)
 
+	// #nosec G204 -- reloadCmd is from trusted configuration, not user input
+	//nolint:noctx // config command, not user request - context not needed
 	cmd := exec.Command("sh", "-c", r.reloadCmd)
 	output, err := cmd.CombinedOutput()
 

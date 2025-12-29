@@ -238,7 +238,7 @@ func TestHostnameToUpstream(t *testing.T) {
 }
 
 func TestGenerate(t *testing.T) {
-	// Create temp directory for test configs
+	// create temp directory for test configs
 	tmpDir := t.TempDir()
 	streamPath := filepath.Join(tmpDir, "stream.conf")
 	httpPath := filepath.Join(tmpDir, "http.conf")
@@ -270,7 +270,7 @@ func TestGenerate(t *testing.T) {
 			t.Error("expected config to be generated (changed=true)")
 		}
 
-		// Verify stream config exists and contains expected content
+		// verify stream config exists and contains expected content
 		streamContent, err := os.ReadFile(streamPath)
 		if err != nil {
 			t.Fatalf("failed to read stream config: %v", err)
@@ -313,7 +313,7 @@ func TestGenerate(t *testing.T) {
 			t.Error("expected config to be generated (changed=true)")
 		}
 
-		// Verify HTTP config exists and contains expected content
+		// verify HTTP config exists and contains expected content
 		httpContent, err := os.ReadFile(httpPath)
 		if err != nil {
 			t.Fatalf("failed to read HTTP config: %v", err)
@@ -378,7 +378,7 @@ func TestGenerate(t *testing.T) {
 			},
 		}
 
-		// First generation
+		// first generation
 		changed1, err := gen.Generate(containers)
 		if err != nil {
 			t.Fatalf("Generate() error = %v", err)
@@ -387,7 +387,7 @@ func TestGenerate(t *testing.T) {
 			t.Error("first generation should detect change")
 		}
 
-		// Second generation with same data
+		// second generation with same data
 		changed2, err := gen.Generate(containers)
 		if err != nil {
 			t.Fatalf("Generate() error = %v", err)
@@ -442,7 +442,7 @@ func TestGenerateEmptyConfigs(t *testing.T) {
 			t.Error("expected config to be generated")
 		}
 
-		// Verify configs exist but are minimal/empty
+		// verify configs exist but are minimal/empty
 		streamContent, err := os.ReadFile(streamPath)
 		if err != nil {
 			t.Fatalf("failed to read stream config: %v", err)
@@ -453,7 +453,7 @@ func TestGenerateEmptyConfigs(t *testing.T) {
 			t.Fatalf("failed to read HTTP config: %v", err)
 		}
 
-		// Should contain comments but no upstream/server blocks
+		// should contain comments but no upstream/server blocks
 		if strings.Contains(string(streamContent), "upstream") {
 			t.Error("empty stream config should not contain upstream blocks")
 		}

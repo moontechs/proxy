@@ -88,21 +88,21 @@ func NewGenerator(streamConfigPath, httpConfigPath string, log *lgr.Logger) (*Ge
 func (g *Generator) Generate(containers []docker.ContainerInfo) (bool, error) {
 	g.log.Logf("DEBUG [Generator] processing containers=%d", len(containers))
 
-	// Build template data
+	// build template data
 	streamData, httpData := g.buildTemplateData(containers)
 
-	// Validate for conflicts
+	// validate for conflicts
 	if err := g.validateConflicts(streamData, httpData); err != nil {
 		return false, err
 	}
 
-	// Generate and write stream config
+	// generate and write stream config
 	streamChanged, err := g.generateStreamConfig(streamData)
 	if err != nil {
 		return false, fmt.Errorf("stream config generation failed: %w", err)
 	}
 
-	// Generate and write HTTP config
+	// generate and write HTTP config
 	httpChanged, err := g.generateHTTPConfig(httpData)
 	if err != nil {
 		return false, fmt.Errorf("HTTP config generation failed: %w", err)
@@ -127,7 +127,7 @@ func (g *Generator) buildTemplateData(containers []docker.ContainerInfo) (Stream
 	}
 
 	for _, container := range containers {
-		// Process stream mappings (TCP/UDP)
+		// process stream mappings (TCP/UDP)
 		if len(container.Mappings) > 0 {
 			streamContainer := StreamContainer{
 				Name:        container.Name,
@@ -153,7 +153,7 @@ func (g *Generator) buildTemplateData(containers []docker.ContainerInfo) (Stream
 			streamData.Containers = append(streamData.Containers, streamContainer)
 		}
 
-		// Process HTTP mappings
+		// process HTTP mappings
 		if container.HTTPMapping != nil {
 			for _, hostname := range container.HTTPMapping.Hostnames {
 				httpServer := HTTPServer{
@@ -175,7 +175,7 @@ func (g *Generator) buildTemplateData(containers []docker.ContainerInfo) (Stream
 
 // validateConflicts checks for port and hostname conflicts
 func (g *Generator) validateConflicts(streamData StreamData, httpData HTTPData) error {
-	// Check TCP port conflicts
+	// check TCP port conflicts
 	tcpPorts := make(map[int]string)
 	for _, container := range streamData.Containers {
 		for _, mapping := range container.TCPMappings {
@@ -187,7 +187,7 @@ func (g *Generator) validateConflicts(streamData StreamData, httpData HTTPData) 
 		}
 	}
 
-	// Check UDP port conflicts
+	// check UDP port conflicts
 	udpPorts := make(map[int]string)
 	for _, container := range streamData.Containers {
 		for _, mapping := range container.UDPMappings {
@@ -199,7 +199,7 @@ func (g *Generator) validateConflicts(streamData StreamData, httpData HTTPData) 
 		}
 	}
 
-	// Check HTTP hostname conflicts
+	// check HTTP hostname conflicts
 	hostnames := make(map[string]string)
 	for _, server := range httpData.HTTPServers {
 		if existing, exists := hostnames[server.Hostname]; exists {
@@ -224,7 +224,7 @@ func (g *Generator) generateStreamConfig(data StreamData) (bool, error) {
 
 	content := buf.Bytes()
 
-	// Debug: print generated config
+	// debug: print generated config
 	g.log.Logf("DEBUG [Generator] stream config generated:\n%s", string(content))
 
 	return g.writeIfChanged(g.streamConfigPath, content)
@@ -239,7 +239,7 @@ func (g *Generator) generateHTTPConfig(data HTTPData) (bool, error) {
 
 	content := buf.Bytes()
 
-	// Debug: print generated config
+	// debug: print generated config
 	g.log.Logf("DEBUG [Generator] HTTP config generated:\n%s", string(content))
 
 	return g.writeIfChanged(g.httpConfigPath, content)
@@ -249,7 +249,8 @@ func (g *Generator) generateHTTPConfig(data HTTPData) (bool, error) {
 func (g *Generator) writeIfChanged(path string, content []byte) (bool, error) {
 	newChecksum := checksum(content)
 
-	// Read existing file checksum
+	// read existing file checksum
+	// #nosec G304 -- path is from trusted configuration, not user input
 	oldContent, err := os.ReadFile(path)
 	if err != nil && !os.IsNotExist(err) {
 		return false, fmt.Errorf("failed to read existing config: %w", err)
@@ -262,7 +263,7 @@ func (g *Generator) writeIfChanged(path string, content []byte) (bool, error) {
 		return false, nil
 	}
 
-	// Write atomically (tmp file + rename)
+	// write atomically (tmp file + rename)
 	if err := atomicWrite(path, content); err != nil {
 		return false, err
 	}
@@ -281,14 +282,19 @@ func checksum(data []byte) string {
 func atomicWrite(path string, data []byte) error {
 	tmpFile := path + ".tmp"
 
-	// Write to temp file
+	// write to temp file
+	// #nosec G306 -- nginx config files need 0644 to be readable by nginx process
 	if err := os.WriteFile(tmpFile, data, 0644); err != nil {
 		return fmt.Errorf("failed to write temp file: %w", err)
 	}
 
-	// Atomic rename
+	// atomic rename
 	if err := os.Rename(tmpFile, path); err != nil {
-		os.Remove(tmpFile) // Cleanup on failure
+		// cleanup on failure
+		if removeErr := os.Remove(tmpFile); removeErr != nil {
+			// return both errors - can't use %w for second error
+			return fmt.Errorf("failed to rename temp file: %w (and failed cleanup: %v)", err, removeErr) //nolint:errorlint // secondary error context only
+		}
 		return fmt.Errorf("failed to rename temp file: %w", err)
 	}
 
@@ -298,8 +304,8 @@ func atomicWrite(path string, data []byte) error {
 // hostnameToUpstream converts a hostname to a valid upstream name
 // Example: api.example.com -> http_api_example_com
 func hostnameToUpstream(hostname string) string {
-	// Replace dots and hyphens with underscores
+	// replace dots and hyphens with underscores
 	upstream := regexp.MustCompile(`[.-]`).ReplaceAllString(hostname, "_")
-	// Prefix with http_
+	// prefix with http_
 	return "http_" + strings.ToLower(upstream)
 }

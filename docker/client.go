@@ -24,7 +24,9 @@ type Client struct {
 type Protocol int
 
 const (
+	// TCP represents the TCP protocol
 	TCP Protocol = iota
+	// UDP represents the UDP protocol
 	UDP
 )
 
@@ -46,9 +48,9 @@ type PortMapping struct {
 
 // HTTPMapping represents HTTP hostname-based routing configuration
 type HTTPMapping struct {
-	Hostnames     []string // List of hostnames for this container
-	ContainerPort int      // Container HTTP port
-	HTTPS         bool     // Whether to listen on 443 instead of 80
+	Hostnames     []string // list of hostnames for this container
+	ContainerPort int      // container HTTP port
+	HTTPS         bool     // whether to listen on 443 instead of 80
 }
 
 // NewClient creates a new Docker client
@@ -63,7 +65,7 @@ func NewClient(host string, log *lgr.Logger) (*Client, error) {
 
 	log.Logf("INFO connecting to Docker socket=%s", host)
 
-	// Test connection
+	// test connection
 	ctx := context.Background()
 	if _, err := cli.Ping(ctx); err != nil {
 		return nil, fmt.Errorf("failed to ping Docker daemon: %w", err)
@@ -102,11 +104,12 @@ func (c *Client) ScanContainers(ctx context.Context) ([]ContainerInfo, error) {
 	return results, nil
 }
 
+//nolint:gocognit,gocyclo // complex parsing logic is unavoidable
 func (c *Client) parseContainer(ctx context.Context, ctr types.Container) (*ContainerInfo, error) {
 	name := strings.TrimPrefix(ctr.Names[0], "/")
 	id := ctr.ID[:12]
 
-	// Get container IP
+	// get container IP
 	inspect, err := c.cli.ContainerInspect(ctx, ctr.ID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to inspect container: %w", err)
@@ -114,7 +117,7 @@ func (c *Client) parseContainer(ctx context.Context, ctr types.Container) (*Cont
 
 	ip := inspect.NetworkSettings.IPAddress
 	if ip == "" {
-		// Try default bridge network
+		// try default bridge network
 		for _, network := range inspect.NetworkSettings.Networks {
 			if network.IPAddress != "" {
 				ip = network.IPAddress
@@ -130,7 +133,7 @@ func (c *Client) parseContainer(ctx context.Context, ctr types.Container) (*Cont
 
 	c.log.Logf("DEBUG [Docker] processing_container name=%s id=%s ip=%s", name, id, ip)
 
-	// Read labels
+	// read labels
 	c.log.Logf("DEBUG [Docker] reading_labels container=%s", name)
 
 	tcpPortsStr := ctr.Labels["proxy.tcp.ports"]
@@ -143,7 +146,7 @@ func (c *Client) parseContainer(ctx context.Context, ctr types.Container) (*Cont
 	c.log.Logf("DEBUG [Docker] container=%s proxy.udp.ports=%q", name, udpPortsStr)
 	c.log.Logf("DEBUG [Docker] container=%s proxy.http.host=%q", name, httpHostStr)
 
-	// Skip if all labels are empty
+	// skip if all labels are empty
 	if tcpPortsStr == "" && udpPortsStr == "" && httpHostStr == "" {
 		c.log.Logf("WARN [Docker] container=%s no proxy labels, skipping", name)
 		return nil, nil
@@ -153,7 +156,7 @@ func (c *Client) parseContainer(ctx context.Context, ctr types.Container) (*Cont
 	tcpCount := 0
 	udpCount := 0
 
-	// Parse TCP port mappings
+	// parse TCP port mappings
 	if tcpPortsStr != "" {
 		c.log.Logf("DEBUG [Docker] parsing_tcp_port_mappings container=%s input=%q", name, tcpPortsStr)
 		tcpMappings, err := parsePortMappings(tcpPortsStr)
@@ -162,7 +165,7 @@ func (c *Client) parseContainer(ctx context.Context, ctr types.Container) (*Cont
 			c.log.Logf("WARN [Docker] skipping_container name=%s reason=invalid_configuration", name)
 			return nil, fmt.Errorf("invalid TCP port mappings: %w", err)
 		}
-		// Tag with TCP protocol
+		// tag with TCP protocol
 		for i := range tcpMappings {
 			tcpMappings[i].Protocol = TCP
 			mappings = append(mappings, tcpMappings[i])
@@ -172,7 +175,7 @@ func (c *Client) parseContainer(ctx context.Context, ctr types.Container) (*Cont
 		tcpCount = len(tcpMappings)
 	}
 
-	// Parse UDP port mappings
+	// parse UDP port mappings
 	if udpPortsStr != "" {
 		c.log.Logf("DEBUG [Docker] parsing_udp_port_mappings container=%s input=%q", name, udpPortsStr)
 		udpMappings, err := parsePortMappings(udpPortsStr)
@@ -181,7 +184,7 @@ func (c *Client) parseContainer(ctx context.Context, ctr types.Container) (*Cont
 			c.log.Logf("WARN [Docker] skipping_container name=%s reason=invalid_configuration", name)
 			return nil, fmt.Errorf("invalid UDP port mappings: %w", err)
 		}
-		// Tag with UDP protocol
+		// tag with UDP protocol
 		for i := range udpMappings {
 			udpMappings[i].Protocol = UDP
 			mappings = append(mappings, udpMappings[i])
@@ -191,18 +194,18 @@ func (c *Client) parseContainer(ctx context.Context, ctr types.Container) (*Cont
 		udpCount = len(udpMappings)
 	}
 
-	// Parse HTTP hostname mapping
+	// parse HTTP hostname mapping
 	var httpMapping *HTTPMapping
 	if httpHostStr != "" {
 		c.log.Logf("DEBUG [Docker] parsing_http_host container=%s input=%q", name, httpHostStr)
 
-		// Parse hostnames (comma-separated)
+		// parse hostnames (comma-separated)
 		hostnames := strings.Split(httpHostStr, ",")
 		for i := range hostnames {
 			hostnames[i] = strings.TrimSpace(hostnames[i])
 		}
 
-		// Parse HTTP port (default: 80)
+		// parse HTTP port (default: 80)
 		httpPort := 80
 		if httpPortStr != "" {
 			var err error
@@ -216,7 +219,7 @@ func (c *Client) parseContainer(ctx context.Context, ctr types.Container) (*Cont
 			}
 		}
 
-		// Parse HTTPS flag (default: false)
+		// parse HTTPS flag (default: false)
 		https := false
 		if httpHTTPSStr != "" {
 			https = strings.ToLower(strings.TrimSpace(httpHTTPSStr)) == "true"
@@ -252,6 +255,8 @@ func (c *Client) parseContainer(ctx context.Context, ctr types.Container) (*Cont
 
 // parsePortMappings parses the proxy.ports label
 // Format: "80:1080,443:1443,53,8080"
+//
+//nolint:gocognit // complex parsing logic is unavoidable
 func parsePortMappings(s string) ([]PortMapping, error) {
 	parts := strings.Split(s, ",")
 	mappings := make([]PortMapping, 0, len(parts))
@@ -265,7 +270,7 @@ func parsePortMappings(s string) ([]PortMapping, error) {
 		var proxyPort, containerPort int
 
 		if strings.Contains(part, ":") {
-			// Format: proxy_port:container_port
+			// format: proxy_port:container_port
 			splits := strings.Split(part, ":")
 			if len(splits) != 2 {
 				return nil, fmt.Errorf("invalid port mapping format: %q", part)
@@ -282,7 +287,7 @@ func parsePortMappings(s string) ([]PortMapping, error) {
 				return nil, fmt.Errorf("invalid container port %q: %w", splits[1], err)
 			}
 		} else {
-			// Format: port (same for both)
+			// format: port (same for both)
 			var err error
 			proxyPort, err = strconv.Atoi(part)
 			if err != nil {
@@ -311,9 +316,12 @@ func parsePortMappings(s string) ([]PortMapping, error) {
 type EventType string
 
 const (
+	// EventStart represents a container start event
 	EventStart EventType = "start"
-	EventStop  EventType = "stop"
-	EventDie   EventType = "die"
+	// EventStop represents a container stop event
+	EventStop EventType = "stop"
+	// EventDie represents a container die event
+	EventDie EventType = "die"
 )
 
 // ContainerEvent represents a Docker container event
@@ -333,7 +341,7 @@ func (c *Client) WatchEvents(ctx context.Context) (<-chan ContainerEvent, <-chan
 		defer close(eventCh)
 		defer close(errCh)
 
-		// Filter for container events only
+		// filter for container events only
 		filters := filters.NewArgs()
 		filters.Add("type", "container")
 		filters.Add("event", "start")

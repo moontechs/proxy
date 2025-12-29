@@ -12,7 +12,7 @@ import (
 // TestDebugOutput demonstrates debug-level config printing
 // Run with: go test -v -run TestDebugOutput
 func TestDebugOutput(t *testing.T) {
-	// Create logger with DEBUG level enabled
+	// create logger with DEBUG level enabled
 	log := lgr.New(lgr.Debug, lgr.Msec, lgr.LevelBraces)
 
 	tmpDir := t.TempDir()
@@ -47,7 +47,7 @@ func TestDebugOutput(t *testing.T) {
 			t.Error("expected config to be generated")
 		}
 
-		// Verify file was written
+		// verify file was written
 		if _, err := os.Stat(streamPath); err != nil {
 			t.Errorf("stream config file not created: %v", err)
 		}
@@ -86,7 +86,7 @@ func TestDebugOutput(t *testing.T) {
 			t.Error("expected config to be generated")
 		}
 
-		// Verify file was written
+		// verify file was written
 		if _, err := os.Stat(httpPath); err != nil {
 			t.Errorf("HTTP config file not created: %v", err)
 		}

@@ -1,6 +1,8 @@
 # golangci-lint configuration
 # https://golangci-lint.run/usage/configuration/
 
+version: 2
+
 run:
   timeout: 5m
   tests: true
@@ -10,15 +12,12 @@ linters:
   enable:
     # Default linters
     - errcheck      # Check for unchecked errors
-    - gosimple      # Simplify code
     - govet         # Reports suspicious constructs
     - ineffassign   # Detects ineffectual assignments
-    - staticcheck   # Go static analysis
+    - staticcheck   # Go static analysis (includes gosimple, stylecheck)
     - unused        # Find unused code
 
     # Additional recommended linters
-    - gofmt         # Check code formatting
-    - goimports     # Check import formatting
     - misspell      # Check for misspelled words
     - revive        # Fast, configurable, extensible linter
     - gosec         # Security-focused linter
@@ -35,108 +34,115 @@ linters:
     - errorlint     # Error wrapping issues
     - nilerr        # Find nil errors being returned
     - predeclared   # Find code that shadows predeclared identifiers
-    - stylecheck    # Replacement for golint
 
-  disable:
-    - typecheck     # Can conflict with build tags
+  settings:
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
 
-linters-settings:
-  errcheck:
-    check-type-assertions: true
-    check-blank: true
+    govet:
+      enable-all: true
+      disable:
+        - shadow         # Too strict for practical use
+        - fieldalignment # Optimization, not correctness issue
 
-  govet:
-    enable-all: true
-    disable:
-      - shadow    # Too strict for practical use
+    gocyclo:
+      min-complexity: 15
 
-  gocyclo:
-    min-complexity: 15
+    gocognit:
+      min-complexity: 20
 
-  gocognit:
-    min-complexity: 20
+    dupl:
+      threshold: 100
 
-  dupl:
-    threshold: 100
+    goconst:
+      min-len: 3
+      min-occurrences: 3
 
-  goconst:
-    min-len: 3
-    min-occurrences: 3
+    misspell:
+      locale: US
 
-  misspell:
-    locale: US
+    revive:
+      rules:
+        - name: exported
+          severity: warning
+          disabled: false
+        - name: unexported-return
+          disabled: true
+        - name: blank-imports
+          disabled: false
+        - name: context-as-argument
+          disabled: false
+        - name: dot-imports
+          disabled: false
+        - name: error-return
+          disabled: false
+        - name: error-strings
+          disabled: false
+        - name: error-naming
+          disabled: false
+        - name: increment-decrement
+          disabled: false
+        - name: var-naming
+          disabled: false
+        - name: package-comments
+          disabled: true  # Not required for all packages
+        - name: range
+          disabled: false
+        - name: receiver-naming
+          disabled: false
+        - name: indent-error-flow
+          disabled: false
+        - name: superfluous-else
+          disabled: false
+        - name: unreachable-code
+          disabled: false
+        - name: redefines-builtin-id
+          disabled: false
 
-  revive:
+    gosec:
+      severity: medium
+      confidence: medium
+      excludes:
+        - G104  # Audit errors not checked (covered by errcheck)
+
+    staticcheck:
+      checks: ["all", "-ST1000"]  # Disable package comment requirement (was stylecheck)
+
+formatters:
+  enable:
+    - gofmt         # Check code formatting
+    - goimports     # Check import formatting
+
+  exclusions:
     rules:
-      - name: exported
-        severity: warning
-        disabled: false
-      - name: unexported-return
-        disabled: true
-      - name: blank-imports
-        disabled: false
-      - name: context-as-argument
-        disabled: false
-      - name: dot-imports
-        disabled: false
-      - name: error-return
-        disabled: false
-      - name: error-strings
-        disabled: false
-      - name: error-naming
-        disabled: false
-      - name: increment-decrement
-        disabled: false
-      - name: var-naming
-        disabled: false
-      - name: package-comments
-        disabled: true  # Not required for all packages
-      - name: range
-        disabled: false
-      - name: receiver-naming
-        disabled: false
-      - name: indent-error-flow
-        disabled: false
-      - name: superfluous-else
-        disabled: false
-      - name: unreachable-code
-        disabled: false
-      - name: redefines-builtin-id
-        disabled: false
+      # Exclude some linters from running on tests
+      - path: _test\.go$
+        linters:
+          - gocyclo
+          - gocognit
+          - errcheck
+          - dupl
+          - gosec
+          - govet
+          - revive
+          - noctx
 
-  gosec:
-    severity: medium
-    confidence: medium
-    excludes:
-      - G104  # Audit errors not checked (covered by errcheck)
+      # Exclude known issues in generated code
+      - path: ".*\\.pb\\.go$"
+        linters:
+          - all
 
-  stylecheck:
-    checks: ["all", "-ST1000"]  # Disable package comment requirement
+    max-issues-per-linter: 0
+    max-same-issues: 0
 
-issues:
-  exclude-rules:
-    # Exclude some linters from running on tests
-    - path: _test\.go
-      linters:
-        - gocyclo
-        - errcheck
-        - dupl
-        - gosec
-
-    # Exclude known issues in generated code
-    - path: ".*\\.pb\\.go"
-      linters:
-        - all
-
-  max-issues-per-linter: 0
-  max-same-issues: 0
-
-  # Show all issues
-  exclude-use-default: false
+    # Show all issues
+    exclude-use-default: false
 
 output:
-  format: colored-line-number
-  print-issued-lines: true
-  print-linter-name: true
-  uniq-by-line: true
-  sort-results: true
+  formats:
+    colored-line-number:
+      print-issued-lines: true
+      print-linter-name: true
+      uniq-by-line: true
+      sort-results: true

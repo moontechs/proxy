@@ -85,10 +85,10 @@ func TestLoad(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Clear environment
+			// clear environment
 			os.Clearenv()
 
-			// Set test environment variables
+			// set test environment variables
 			for k, v := range tt.envVars {
 				os.Setenv(k, v)
 			}

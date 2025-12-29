@@ -242,7 +242,6 @@ func TestContainerInfo(t *testing.T) {
 	t.Run("container info struct with both TCP and HTTP mapping", func(t *testing.T) {
 		info := ContainerInfo{
 			Name: "hybrid-container",
-			IP:   "172.17.0.4",
 			Mappings: []PortMapping{
 				{ProxyPort: 22, ContainerPort: 22, Protocol: TCP},
 			},
@@ -307,7 +306,6 @@ func TestHTTPMapping(t *testing.T) {
 
 	t.Run("HTTPS mapping on port 443", func(t *testing.T) {
 		mapping := HTTPMapping{
-			Hostnames:     []string{"secure.example.com"},
 			ContainerPort: 8443,
 			HTTPS:         true,
 		}

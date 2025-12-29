@@ -39,7 +39,11 @@ Features:
 		if err != nil {
 			return logError("docker connection failed: %w", err)
 		}
-		defer dockerClient.Close()
+		defer func() {
+			if closeErr := dockerClient.Close(); closeErr != nil {
+				log.Logf("WARN [Watch] failed to close docker client: %v", closeErr)
+			}
+		}()
 
 		generator, err := nginx.NewGenerator(cfg.StreamConfigPath, cfg.HTTPConfigPath, log)
 		if err != nil {
@@ -112,8 +116,7 @@ Features:
 // generateAndReload performs the full workflow: scan → generate → validate → reload
 func generateAndReload(ctx context.Context, dockerClient *docker.Client, gen *nginx.Generator,
 	val *nginx.Validator, reload *nginx.Reloader, log *lgr.Logger) error {
-
-	// Scan containers
+	// scan containers
 	containers, err := dockerClient.ScanContainers(ctx)
 	if err != nil {
 		return fmt.Errorf("scan failed: %w", err)
@@ -121,7 +124,7 @@ func generateAndReload(ctx context.Context, dockerClient *docker.Client, gen *ng
 
 	log.Logf("INFO [Watch] scanned containers=%d", len(containers))
 
-	// Generate configs
+	// generate configs
 	changed, err := gen.Generate(containers)
 	if err != nil {
 		return fmt.Errorf("generation failed: %w", err)
@@ -132,12 +135,12 @@ func generateAndReload(ctx context.Context, dockerClient *docker.Client, gen *ng
 		return nil
 	}
 
-	// Validate
+	// validate
 	if err := val.Validate(); err != nil {
 		return fmt.Errorf("validation failed: %w", err)
 	}
 
-	// Reload Nginx
+	// reload Nginx
 	if err := reload.Reload(); err != nil {
 		return fmt.Errorf("reload failed: %w", err)
 	}

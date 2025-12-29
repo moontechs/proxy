@@ -11,9 +11,9 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  ci:
-    name: CI (required)
-    uses: ./.github/workflows/ci.yml
+  quality-checks:
+    name: Quality checks (required)
+    uses: ./.github/workflows/quality-checks.yml
 
   build-and-push:
     name: Build and push multi-platform images

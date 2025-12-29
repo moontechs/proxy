@@ -1,6 +1,17 @@
 name: CI
 
 on:
+  workflow_call:
+    inputs:
+      go-version:
+        description: 'Go version to use'
+        required: false
+        type: string
+        default: '1.24'
+    outputs:
+      coverage-file:
+        description: 'Path to coverage file'
+        value: ${{ jobs.ci.outputs.coverage-file }}
   push:
     branches:
       - main

@@ -1,0 +1,42 @@
+services:
+  proxy:
+    build: ../../.
+    container_name: proxy-http-services
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      LOG_LEVEL: "DEBUG"
+      LOG_CALLER: "false"
+      DOCKER_HOST: "unix:///var/run/docker.sock"
+    networks:
+      - proxy-network
+
+  svc1:
+    image: ghcr.io/umputun/echo-http
+    hostname: svc1
+    container_name: svc1
+    command: --message="hello world from svc1"
+    labels:
+      proxy.http.host: "svc1.local"
+      proxy.http.port: "8080"
+    networks:
+      - proxy-network
+
+  svc2:
+    image: ghcr.io/umputun/echo-http
+    hostname: svc2
+    container_name: svc2
+    command: --message="hello world from svc2"
+    labels:
+      proxy.http.host: "svc2.local"
+      proxy.http.port: "8080"
+    networks:
+      - proxy-network
+
+networks:
+  proxy-network:
+    driver: bridge

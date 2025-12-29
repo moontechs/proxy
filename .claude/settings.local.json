@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go test:*)",
+      "Bash(go build:*)",
+      "Bash(ls:*)",
+      "Bash(make test:*)",
+      "Bash(find:*)",
+      "Bash(./bin/proxy:*)",
+      "mcp__serena__list_dir",
+      "Bash(mkdir:*)",
+      "Bash(cat:*)"
+    ]
+  }
+}

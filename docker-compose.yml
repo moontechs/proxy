@@ -1,0 +1,46 @@
+services:
+  proxy:
+    build: .
+    container_name: proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      LOG_LEVEL: "DEBUG"
+      DOCKER_HOST: "unix:///var/run/docker.sock"
+    networks:
+      - proxy-network
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Example web service
+  webapp:
+    image: nginx:alpine
+    container_name: webapp
+    labels:
+      proxy.http.host: "app.local,www.local"
+      proxy.http.port: "80"
+    networks:
+      - proxy-network
+    restart: unless-stopped
+
+  api:
+    image: ghcr.io/umputun/echo-http
+    container_name: api
+    command: --message="API Response"
+    labels:
+      proxy.http.host: "api.local"
+      proxy.http.port: "8080"
+    networks:
+      - proxy-network
+    restart: unless-stopped
+
+networks:
+  proxy-network:
+    driver: bridge

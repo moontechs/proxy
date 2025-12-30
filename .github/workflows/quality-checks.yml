@@ -70,36 +70,8 @@ jobs:
           go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
           echo "✅ Tests passed"
 
-      - name: Upload coverage artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage
-          path: coverage.out
-          retention-days: 5
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./coverage.out
-          flags: unittests
-          fail_ci_if_error: false
-
       - name: Build binary
         run: |
           echo "Building binary..."
           CGO_ENABLED=0 go build -ldflags="-s -w" -o proxy .
           echo "✅ Binary built successfully"
-
-      - name: Quality checks summary
-        run: |
-          echo "## ✅ Quality Checks Passed" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "All quality gates passed successfully:" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Code formatting (gofmt)" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Go vet" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Staticcheck" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Golangci-lint" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Tests with race detection" >> $GITHUB_STEP_SUMMARY
-          echo "- ✅ Binary build" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Status:** Ready for Docker build 🚀" >> $GITHUB_STEP_SUMMARY

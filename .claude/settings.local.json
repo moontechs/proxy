@@ -9,7 +9,14 @@
       "Bash(./bin/proxy:*)",
       "mcp__serena__list_dir",
       "Bash(mkdir:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(golangci-lint run:*)",
+      "Bash(golangci-lint help:*)",
+      "Bash(golangci-lint linters:*)",
+      "WebFetch(domain:golangci-lint.run)",
+      "Bash(gofmt:*)",
+      "Bash(golangci-lint config:*)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   }
 }

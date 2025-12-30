@@ -21,7 +21,7 @@ jobs:
     needs: quality-checks
     if: ${{ success() }}  # Only run if quality checks passed
     permissions:
-      contents: read
+      contents: write
       packages: write
       id-token: write
 
@@ -94,6 +94,14 @@ jobs:
             VERSION=${{ github.ref_name }}
             BUILD_DATE=${{ github.event.head_commit.timestamp }}
             VCS_REF=${{ github.sha }}
+
+      - name: Show token scopes (debug)
+        # Safe diagnostic: prints only the X-OAuth-Scopes response header to help verify token permissions.
+        env:
+          T: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "X-OAuth-Scopes for token:"
+          curl -sI -H "Authorization: token $T" https://api.github.com | grep -i x-oauth-scopes || true
 
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v1

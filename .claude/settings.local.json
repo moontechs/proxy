@@ -16,7 +16,9 @@
       "WebFetch(domain:golangci-lint.run)",
       "Bash(gofmt:*)",
       "Bash(golangci-lint config:*)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "mcp__serena__find_file",
+      "mcp__serena__get_symbols_overview"
     ]
   }
 }

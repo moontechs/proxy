@@ -45,6 +45,11 @@ Features:
 			}
 		}()
 
+		// Ensure proxy network exists
+		if err := dockerClient.EnsureNetwork(ctx, cfg.NetworkName); err != nil {
+			return logError("network setup failed: %w", err)
+		}
+
 		generator, err := nginx.NewGenerator(cfg.StreamConfigPath, cfg.HTTPConfigPath, log)
 		if err != nil {
 			return logError("generator initialization failed: %w", err)

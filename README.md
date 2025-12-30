@@ -13,7 +13,7 @@ Dynamic Nginx configuration generator for Docker containers with automatic servi
 - **Config Generation**: Template-based Nginx configuration with checksum detection
 - **Zero Downtime**: Graceful Nginx reloads preserve active connections
 - **Debug Output**: Full generated configs visible with LOG_LEVEL=DEBUG
-- **CLI Interface**: Cobra-powered commands (generate, watch, validate)
+- **CLI Interface**: Cobra-powered commands (generate, watch)
 
 ## Architecture
 
@@ -164,14 +164,6 @@ proxy watch
 ```
 
 This is the primary mode for production - watches for container start/stop/die events.
-
-### validate
-
-Validate Nginx configs without applying:
-
-```bash
-proxy validate
-```
 
 ## Usage Examples
 
@@ -469,7 +461,7 @@ Current coverage:
 ├── cmd/                    # CLI commands (Cobra)
 │   ├── generate.go        # One-shot config generation
 │   ├── watch.go           # Docker event monitoring
-│   └── validate.go        # Config validation
+│   └── root.go            # Root command and config
 ├── config/                # Configuration management
 ├── docker/                # Docker client and event handling
 ├── nginx/                 # Nginx config generation

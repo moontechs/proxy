@@ -5,10 +5,16 @@ import (
 	"strings"
 )
 
+const (
+	// DefaultNetworkName is the default Docker network name for proxy communication
+	DefaultNetworkName = "proxy-network"
+)
+
 // Config holds all proxy configuration
 type Config struct {
 	// docker
-	DockerHost string
+	DockerHost  string
+	NetworkName string // docker network name for proxy communication (default: proxy-network)
 
 	// nginx configuration paths
 	StreamConfigPath string // path to stream module config (default: /etc/nginx/conf.d/proxy.conf)
@@ -27,6 +33,7 @@ func Load() (*Config, error) {
 
 	// docker configuration
 	cfg.DockerHost = getEnvOrDefault("DOCKER_HOST", "unix:///var/run/docker.sock")
+	cfg.NetworkName = getEnvOrDefault("PROXY_NETWORK", DefaultNetworkName)
 
 	// nginx configuration paths
 	cfg.StreamConfigPath = getEnvOrDefault("NGINX_STREAM_CONFIG_PATH", "/etc/nginx/conf.d/proxy.conf")

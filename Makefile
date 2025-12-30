@@ -51,7 +51,7 @@ vet: ## Run go vet
 	@go vet ./...
 	@echo "✓ Vet complete"
 
-check: fmt vet lint test ## Run all checks (format, vet, lint, test)
+check: fmt vet lint lint-golangci test ## Run all checks (format, vet, lint, test)
 	@echo "✓ All checks passed"
 
 clean: ## Clean build artifacts

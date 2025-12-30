@@ -80,10 +80,17 @@ func getConfig(cmd *cobra.Command) *config.Config {
 		reloadCmd = val
 	}
 
+	// get network name from environment or use default
+	networkName := config.DefaultNetworkName
+	if val := os.Getenv("PROXY_NETWORK"); val != "" {
+		networkName = val
+	}
+
 	return &config.Config{
 		LogLevel:         logLevel,
 		LogCaller:        false,
 		DockerHost:       dockerHost,
+		NetworkName:      networkName,
 		StreamConfigPath: streamConfigPath,
 		HTTPConfigPath:   httpConfigPath,
 		NginxReloadCmd:   reloadCmd,

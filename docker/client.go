@@ -342,14 +342,14 @@ func (c *Client) WatchEvents(ctx context.Context) (<-chan ContainerEvent, <-chan
 		defer close(errCh)
 
 		// filter for container events only
-		filters := filters.NewArgs()
-		filters.Add("type", "container")
-		filters.Add("event", "start")
-		filters.Add("event", "stop")
-		filters.Add("event", "die")
+		eventFilters := filters.NewArgs()
+		eventFilters.Add("type", "container")
+		eventFilters.Add("event", "start")
+		eventFilters.Add("event", "stop")
+		eventFilters.Add("event", "die")
 
 		eventStream, eventErrCh := c.cli.Events(ctx, types.EventsOptions{
-			Filters: filters,
+			Filters: eventFilters,
 		})
 
 		c.log.Logf("INFO [Docker] watching events")
@@ -386,8 +386,48 @@ func (c *Client) WatchEvents(ctx context.Context) (<-chan ContainerEvent, <-chan
 	return eventCh, errCh
 }
 
+// EnsureNetwork ensures the specified Docker network exists, creating it if necessary
+func (c *Client) EnsureNetwork(ctx context.Context, networkName string) error {
+	c.log.Logf("INFO ensuring docker network exists: %s", networkName)
+
+	// check if network already exists
+	networks, err := c.cli.NetworkList(ctx, types.NetworkListOptions{
+		Filters: filters.NewArgs(filters.Arg("name", networkName)),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to list networks: %w", err)
+	}
+
+	// network exists (exact match required)
+	for _, net := range networks {
+		if net.Name == networkName {
+			c.log.Logf("DEBUG network already exists: %s (id=%s)", networkName, net.ID[:12])
+
+			return nil
+		}
+	}
+
+	// create network
+	c.log.Logf("INFO creating docker network: %s", networkName)
+	resp, err := c.cli.NetworkCreate(ctx, networkName, types.NetworkCreate{
+		Driver:     "bridge",
+		Attachable: true,
+		Labels: map[string]string{
+			"created_by": "proxy",
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("failed to create network: %w", err)
+	}
+
+	c.log.Logf("INFO network created successfully: %s (id=%s)", networkName, resp.ID[:12])
+
+	return nil
+}
+
 // Close closes the Docker client connection
 func (c *Client) Close() error {
 	c.log.Logf("INFO closing_docker_client")
+
 	return c.cli.Close()
 }

@@ -1,19 +1,4 @@
 services:
-  proxy:
-    image: ghcr.io/moontechs/proxy:latest
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    environment:
-      LOG_LEVEL: "DEBUG"
-      LOG_CALLER: "false"
-      DOCKER_HOST: "unix:///var/run/docker.sock"
-    networks:
-      - proxy-network
-
   svc1:
     image: ghcr.io/umputun/echo-http
     hostname: svc1
@@ -38,4 +23,5 @@ services:
 
 networks:
   proxy-network:
-    driver: bridge
+    name: ${PROXY_NETWORK:-proxy-network}
+    external: true

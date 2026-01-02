@@ -99,6 +99,7 @@ DOCKER_HOST=unix:///var/run/docker.sock           # Docker socket
 STREAM_CONFIG_PATH=/etc/nginx/conf.d/proxy.conf
 HTTP_CONFIG_PATH=/etc/nginx/conf.d/http-proxy.conf
 NGINX_RELOAD_CMD=nginx -s reload
+NGINX_WORKER_CONNECTIONS=1000                         # Max connections per worker (default: 1000)
 ```
 
 ## Docker Label Schema

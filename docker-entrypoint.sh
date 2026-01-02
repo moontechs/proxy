@@ -3,6 +3,13 @@ set -e
 
 echo "[Entrypoint] Starting Nginx proxy configurator"
 
+# Set default worker_connections if not provided
+export NGINX_WORKER_CONNECTIONS=${NGINX_WORKER_CONNECTIONS:-1000}
+
+# Process nginx.conf template with environment variables
+echo "[Entrypoint] Configuring Nginx with NGINX_WORKER_CONNECTIONS=$NGINX_WORKER_CONNECTIONS"
+envsubst '${NGINX_WORKER_CONNECTIONS}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
+
 # Start Nginx in background
 echo "[Entrypoint] Starting Nginx"
 nginx

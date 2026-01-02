@@ -16,14 +16,14 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o proxy .
 # Runtime stage - nginx:alpine base
 FROM nginx:alpine
 
-# Install minimal dependencies
-RUN apk --no-cache add ca-certificates
+# Install minimal dependencies (gettext for envsubst)
+RUN apk --no-cache add ca-certificates gettext
 
 # Copy binary from builder
 COPY --from=builder /build/proxy /usr/local/bin/proxy
 
-# Copy nginx main config with HTTP and stream modules
-COPY nginx/nginx.conf /etc/nginx/nginx.conf
+# Copy nginx main config template (processed at runtime with envsubst)
+COPY nginx/nginx.conf /etc/nginx/nginx.conf.template
 
 # Create directories for generated configs
 RUN mkdir -p /etc/nginx/conf.d && \

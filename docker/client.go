@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -310,80 +309,6 @@ func parsePortMappings(s string) ([]PortMapping, error) {
 	}
 
 	return mappings, nil
-}
-
-// EventType represents container lifecycle events
-type EventType string
-
-const (
-	// EventStart represents a container start event
-	EventStart EventType = "start"
-	// EventStop represents a container stop event
-	EventStop EventType = "stop"
-	// EventDie represents a container die event
-	EventDie EventType = "die"
-)
-
-// ContainerEvent represents a Docker container event
-type ContainerEvent struct {
-	Type        EventType
-	ContainerID string
-	Name        string
-	Timestamp   time.Time
-}
-
-// WatchEvents watches Docker events and returns channels for events and errors
-func (c *Client) WatchEvents(ctx context.Context) (<-chan ContainerEvent, <-chan error) {
-	eventCh := make(chan ContainerEvent, 10)
-	errCh := make(chan error, 1)
-
-	go func() {
-		defer close(eventCh)
-		defer close(errCh)
-
-		// filter for container events only
-		eventFilters := filters.NewArgs()
-		eventFilters.Add("type", "container")
-		eventFilters.Add("event", "start")
-		eventFilters.Add("event", "stop")
-		eventFilters.Add("event", "die")
-
-		eventStream, eventErrCh := c.cli.Events(ctx, types.EventsOptions{
-			Filters: eventFilters,
-		})
-
-		c.log.Logf("INFO [Docker] watching events")
-
-		for {
-			select {
-			case event := <-eventStream:
-				containerEvent := ContainerEvent{
-					Type:        EventType(event.Action),
-					ContainerID: event.Actor.ID[:12],
-					Name:        strings.TrimPrefix(event.Actor.Attributes["name"], "/"),
-					Timestamp:   time.Unix(event.Time, 0),
-				}
-
-				c.log.Logf("INFO [Docker] event type=%s container=%s id=%s",
-					containerEvent.Type, containerEvent.Name, containerEvent.ContainerID)
-
-				eventCh <- containerEvent
-
-			case err := <-eventErrCh:
-				if err != nil {
-					c.log.Logf("ERROR [Docker] event_stream_error error=%q", err)
-					errCh <- err
-					return
-				}
-
-			case <-ctx.Done():
-				c.log.Logf("INFO [Docker] event_stream_closed")
-				return
-			}
-		}
-	}()
-
-	return eventCh, errCh
 }
 
 // EnsureNetwork ensures the specified Docker network exists, creating it if necessary

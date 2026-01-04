@@ -244,33 +244,15 @@ Cloudflared sends traffic to proxy:80, Nginx routes by Host header to the correc
 
 ## CLI Commands
 
-### Watch Mode (Production)
+### Generate
 
-Monitor Docker events and auto-regenerate configs:
-
-```bash
-# In Docker (default)
-docker-compose up
-
-# Standalone
-./bin/proxy-nginx watch
-```
-
-### Generate Once
-
-Generate configs once and exit:
+Generate Nginx configs from running containers:
 
 ```bash
 ./bin/proxy-nginx generate
 ```
 
-### Validate
-
-Validate Nginx configs without applying:
-
-```bash
-./bin/proxy-nginx validate
-```
+This command is automatically executed during container startup via the entrypoint script.
 
 ## Environment Variables
 
@@ -370,7 +352,7 @@ docker exec proxy-nginx tail -f /var/log/nginx/stream.log
 docker exec proxy-nginx tail -f /var/log/nginx/error.log
 ```
 
-### Watch Docker Events
+### Monitor Container Events
 
 ```bash
 docker events --filter 'event=start' --filter 'event=stop' --filter 'event=die'
@@ -477,7 +459,7 @@ docker exec proxy-nginx nginx -s reload
 
 ```bash
 make build
-./bin/proxy-nginx watch
+./bin/proxy-nginx generate
 ```
 
 ### Docker Build
@@ -530,7 +512,7 @@ docker ps -f name=proxy-nginx
 # Monitor logs
 docker logs -f proxy-nginx
 
-# Watch for errors
+# Check for errors
 docker logs proxy-nginx 2>&1 | grep ERROR
 ```
 

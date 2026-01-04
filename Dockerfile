@@ -30,6 +30,9 @@ RUN mkdir -p /etc/nginx/conf.d && \
     touch /etc/nginx/conf.d/proxy.conf && \
     touch /etc/nginx/conf.d/http-proxy.conf
 
+# Preserve nginx's original entrypoint before overriding
+RUN cp /docker-entrypoint.sh /nginx-entrypoint.sh
+
 # Copy custom entrypoint
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
@@ -38,4 +41,4 @@ RUN chmod +x /docker-entrypoint.sh
 EXPOSE 80 443 53/udp
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["watch"]
+CMD ["nginx", "-g", "daemon off;"]

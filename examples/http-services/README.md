@@ -2,16 +2,6 @@
 
 This example demonstrates HTTP hostname-based routing using the proxy-nginx system. Multiple services are accessible via different hostnames on the same port (80).
 
-## Architecture
-
-```
-                    ┌─────────────────┐
-curl → svc1.local →│   Nginx Proxy   │→ svc1:8080
-                    │   (Port 80)     │
-curl → svc2.local →│                 │→ svc2:8080
-                    └─────────────────┘
-```
-
 ## Label Schema
 
 For HTTP hostname-based routing, use these Docker labels:
@@ -34,6 +24,8 @@ labels:
 ```
 
 ## Usage
+
+This is a **simple single-file example** for local development and testing. For production setups with multiple services, see the [separate-composes](../separate-composes/) or [taxhacker](../taxhacker/) examples.
 
 ### 1. Add Hostnames to /etc/hosts
 
@@ -114,7 +106,7 @@ docker network inspect http-services_proxy-network
 
 **Check generated nginx config:**
 ```bash
-docker exec proxy-http-services cat /etc/nginx/conf.d/http-proxy.conf
+docker exec http-services-proxy-1 cat /etc/nginx/conf.d/http-proxy.conf
 ```
 
 ### Hostname Conflict Error
@@ -135,7 +127,7 @@ docker inspect svc1 | jq '.[0].Config.Labels'
 
 **Check proxy logs:**
 ```bash
-docker logs proxy-http-services
+docker logs http-services-proxy-1
 ```
 
 Expected output:
@@ -178,3 +170,22 @@ This creates:
 - HTTP hostname routing on port 80 (HTTP module)
 
 No conflict because they use different nginx modules.
+
+## Network Architecture Note
+
+This example uses a **simple single-file setup** with a local bridge network created automatically by Docker Compose (`http-services_proxy-network`). This is perfect for:
+- ✅ Local development and testing
+- ✅ Quick demos
+- ✅ Learning how the proxy works
+
+For **production deployments**, you should use the **multi-network pattern** shown in:
+- [separate-composes](../separate-composes/) - Multiple compose files sharing external network
+- [taxhacker](../taxhacker/) - Production setup with Cloudflare + database isolation
+
+**Production Pattern Benefits**:
+- Explicit external `proxy-network` shared across compose projects
+- Service isolation using local networks for databases
+- Independent service management and updates
+- Better security through network segmentation
+
+See [Network Architecture Best Practices](../../README.md#network-architecture-best-practices) in the main README for detailed guidance.

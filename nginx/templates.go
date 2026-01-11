@@ -53,6 +53,9 @@ server {
     listen {{if .HTTPS}}443 ssl{{else}}80{{end}};
     server_name {{.Hostname}};
 
+    # Allow unlimited request body size - let backend services handle their own limits
+    client_max_body_size 0;
+
     location / {
         proxy_pass http://{{.UpstreamName}};
 
